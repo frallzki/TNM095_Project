@@ -6,7 +6,7 @@ export default class Game extends Phaser.Game {
    * Create phaser game
    */
   public constructor() {
-    // Run parent constuctor
+    // Run parent constuctor test
     super(phaserConfig);
   }
 }
