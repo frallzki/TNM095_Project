@@ -39,10 +39,6 @@ export class GameScene extends Phaser.Scene {
 
     // Add logotype
     const logo = this.physics.add.image(512, 288, 'logo');
-
-    // Set logotype properties
-    logo.setVelocity(500, 200);
-    logo.setBounce(1, 1);
     logo.setCollideWorldBounds(true);
 
     // Make particles follow the logotype
