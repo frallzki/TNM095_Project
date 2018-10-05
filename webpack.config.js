@@ -67,7 +67,7 @@ module.exports = {
         to: './',
       },
       {
-        context: './src/assets/',
+        context: './src/game/assets/',
         from: '**/*',
         to: 'assets/',
       }
