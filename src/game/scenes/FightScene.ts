@@ -11,8 +11,10 @@ export const FightScene = new Phaser.Class({
 
   preload: function() {
     console.debug('Preload');
-    this.load.image('player', 'assets/FaceMan.png');
-    this.load.image('enemy', 'assets/FaceDude.png');
+    this.load.image('hero1', 'assets/HeroFrall.png');
+    this.load.image('hero2', 'assets/HeroLix.png');
+    this.load.image('enemy1', 'assets/enmyTard.png');
+    this.load.image('enemy2', 'assets/enmySpooks.png');
   },
 
   create: function() {
@@ -34,16 +36,23 @@ export const BattleScene = new Phaser.Class({
     console.debug('Create');
     this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
   
-    const warrior = new PlayerCharacter(this, 250, 50, 'player', 1, 'FaceMan', 100, 20);
-    this.add.existing(warrior);
+    // Heroes
+    const fralle = new PlayerCharacter(this, 250, 50, 'hero1', 1, 'Fralle', 100, 20);
+    this.add.existing(fralle);
+
+    const felix = new PlayerCharacter(this, 250, 100, 'hero2', 4, 'Felix', 100, 20);
+    this.add.existing(felix);
   
-    // const faceDude = new Enemy(this, 50, 50, 'enemy', null, 'faceDude', 50, 3);
-    const faceDude = new Enemy(this, 50, 50, 'enemy', null, 'faceDude', 50, 3);
-    this.add.existing(faceDude);
+    // Enemies
+    const spooks = new Enemy(this, 50, 50, 'enemy1', null, 'Spooks', 50, 3);
+    this.add.existing(spooks);
+
+    const tard = new Enemy(this, 50, 100, 'enemy2', null, 'Tard', 50, 3);
+    this.add.existing(tard);
   
-    this.heroes = [warrior];
+    this.heroes = [fralle, felix];
   
-    this.enemies = [faceDude];
+    this.enemies = [spooks, tard];
   
     this.units = this.heroes.concat(this.enemies);
   
