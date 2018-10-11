@@ -1,230 +1,131 @@
 import { BlendModes, Scene } from 'phaser';
 
-/**
- * Sample Phaser scene
- * @extends {Phaser.Scene}
- */
+export const FightScene = new Phaser.Class({
+  Extends: Phaser.Scene,
 
-export class Unit extends Phaser.GameObjects.Sprite {
+  initialize:
 
-  public constructor(x, y, texture, frame, type, hp, damage) {
-    super(x, y, texture, frame, type, hp, damage);
-    // Phaser.GameObjects.Sprite.call(this, this.scene, x, y, texture, frame);
-    this.type = type;
-    this.maxHp = this.hp = hp;
-    this.damage = damage; // default damage
-  }
+  function FightScene() {
+    Phaser.Scene.call(this, { key: 'FightScene' });
+  },
 
-  public attack(target:number): void { // number???
-    target.takeDamage(this.damage);
-  }
-  public takeDamage(damage:number): void {
-    this.hp -= damage;
-  }
-
-}
-
-export class Enemy extends Unit {
-  public constructor(scene, x, y, texture, frame, type, hp, damage) {
-    // Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
-
-    super(scene, x, y, texture, frame, type, hp, damage);
-  }
-}
-
-export class PlayerCharacter extends Unit {
-  public constructor(scene, x, y, texture, frame, type, hp, damage) {
-    // Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
-    // glöm inte att flippa sprite osv
-    // this.flipX = true;
-    // this.setScale(2);
-    super(scene, x, y, texture, frame, type, hp, damage);
-  }
-}
-
-export class FightScene extends Phaser.Scene {
-  /**
-   * Phaser preload method
-   * Called before scene is created
-   * @returns {void}
-   */
-  public preload(): void {
+  preload: function() {
     console.debug('Preload');
     this.load.image('player', 'assets/FaceMan.png');
     this.load.image('enemy', 'assets/FaceDude.png');
+  },
 
-    // Fixa lite nice sprites
-    // player enemy osv
-  }
-
-  public constructor() {
-    super({ key: 'FightScene' });
-    // Phaser.Scene.call(this, { key: 'Fightscene' });
-
-  }
-
-  /**
-   * Phaser create method
-   * Initialize scene objects
-   * @returns {void}
-   */
-
-  public create(): void {
+  create: function() {
     console.debug('Create');
-
     this.scene.start('BattleScene');
   }
-}
+});
 
-export class BattleScene extends Phaser.Scene {
+export const BattleScene = new Phaser.Class({
+  Extends: Phaser.Scene,
 
-  public constructor() {
-    super({ key: 'BattleScene' });
-    // Phaser.Scene.call(this, { key: 'BattleScene' });
+  initialize:
 
-    // super();
-  }
+  function BattleScene() {
+    Phaser.Scene.call(this, { key: 'BattleScene' });
+  },
 
-  public nextTurn() {
+  create: function(){
+    console.debug('Create');
+    this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
+  
+    const warrior = new PlayerCharacter(this, 250, 50, 'player', 1, 'FaceMan', 100, 20);
+    this.add.existing(warrior);
+  
+    // const faceDude = new Enemy(this, 50, 50, 'enemy', null, 'faceDude', 50, 3);
+    const faceDude = new Enemy(this, 50, 50, 'enemy', null, 'faceDude', 50, 3);
+    this.add.existing(faceDude);
+  
+    this.heroes = [warrior];
+  
+    this.enemies = [faceDude];
+  
+    this.units = this.heroes.concat(this.enemies);
+  
+    // Run UI scene at the same time
+    this.scene.launch('UIScene');
+  
+    this.index = -1;
+  },
+
+  nextTurn: function() {
     this.index++;
+    // no more units? start from first
     if (this.index >= this.units.length) {
       this.index = 0;
     }
     if (this.units[this.index]) {
+      // if its player hero
       if (this.units[this.index] instanceof PlayerCharacter) {
         this.events.emit('PlayerSelect', this.index);
-      } else {
+      } else { // enemy unit
         let r = Math.floor(Math.random() * this.heroes.length);
         this.units[this.index].attack(this.heroes[r]);
         this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
       }
     }
-  }
+  },
 
-  public receivePlayerSelection(action, target) {
-    if (action == 'Attack') {
+  receivePlayerSelection: function(action, target) {
+    if (action == 'attack') {
+      console.log('fjfl', this.index)
       this.units[this.index].attack(this.enemies[target]);
     }
     this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
   }
+});
 
-  public create(): void {
-    console.debug('Create');
-    this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
+const Unit = new Phaser.Class({
+  Extends: Phaser.GameObjects.Sprite,
 
-    const warrior = new PlayerCharacter(this, 250, 50, 'player', 'FaceMan', 100, 20, null);
-    this.add.existing(warrior);
+  initialize:
 
-    // const faceDude = new Enemy(this, 50, 50, 'enemy', null, 'faceDude', 50, 3);
-    const faceDude = new Enemy(this, 50, 50, 'enemy', 'faceDude', 50, 3, null);
-    this.add.existing(faceDude);
+  function Unit(scene, x, y, texture, frame, type, hp, damage) {
+    Phaser.GameObjects.Sprite.call(this, scene, x, y, texture, frame);
+    this.type = type;
+    this.maxHp = this.hp = hp;
+    this.damage = damage;
+  },
 
-    this.heroes = [warrior];
+  attack: function(target) {
+    target.takeDamage(this.damage);
+    this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + " damage");
+  },
 
-    this.enemies = [faceDude];
-
-    this.units = this.heroes.concat(this.enemies);
-
-    // Run UI scene at the same time
-    this.scene.launch('UIScene');
-
-    this.index = -1;
-  }
-
-}
-
-export class UIScene extends Phaser.Scene {
-
-  public constructor() {
-    super({ key: 'UIScene' });
-  }
-
-  public remapHeroes() {
-    const heroes = this.battleScene.heroes;
-    this.heroesMenu.reMap(heroes);
-  }
-
-  public remapEnemies() {
-    const enemies = this.battleScene.enemies;
-    this.enemyMenu.reMap(enemies);
-  }
-
-  public onKeyInput(event) {
-    if (this.currentMenu) {
-      if (event.code === "ArrowUp") {
-        this.currentMenu.moveSelectionUp();
-      } else if (event.code === "ArrowDown") {
-        this.currentMenu.moveSelectionDown();
-      } else if (event.code === "ArrowRight" || event.code === "Shift") {
-      } else if (event.code === "Space" || event.code === "ArrowLeft") {
-        this.currentMenu.confirm();
-      }
+  takeDamage: function(damage) {
+    this.hp -= damage;
+    if(this.hp <= 0) {
+      this.hp = 0;
+      this.alive = false;
     }
   }
 
-  public onPlayerSelect(id) {
-    this.heroesMenu.select(id);
-    this.actionsMenu.select(0);
-    this.currentMenu = this.actionsMenu;
+});
+
+const Enemy = new Phaser.Class({
+  Extends: Unit,
+
+  initialize:
+  function Enemy(scene, x, y, texture, frame, type, hp, damage) {
+    Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
   }
+});
 
-  public onSelectEnemies() {
-    this.currentMenu = this.enemyMenu;
-    this.enemyMenu.select(0);
+const PlayerCharacter = new Phaser.Class({
+  Extends: Unit,
+
+  initialize:
+  function Enemy(scene, x, y, texture, frame, type, hp, damage) {
+    Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
+    // this.flipX = true;
+    // this.setScale(2);
   }
-
-  public onEnemy(index) {
-    this.heroesMenu.deselect();
-    this.actionsMenu.deselect();
-    this.enemyMenu.deselect();
-    this.currentMenu = null;
-    this.battleScene.receivePlayerSelection('Attack', index);
-  }
-
-  public create(): void {
-    console.debug('Create');
-
-    this.graphics = this.add.graphics();
-    this.graphics.lineStyle(1, 0xffffff);
-    this.graphics.fillStyle(0x031f4c, 1);
-    this.graphics.strokeRect(2, 150, 90, 100);
-    this.graphics.fillRect(2, 150, 90, 100);
-    this.graphics.strokeRect(95, 150, 90, 100);
-    this.graphics.fillRect(95, 150, 90, 100);
-    this.graphics.strokeRect(188, 150, 130, 100);
-    this.graphics.fillRect(188, 150, 130, 100);
-
-    // menu container
-    this.menus = this.add.container();
-
-    this.heroesMenu = new HeroMenu(195, 153, this);
-    this.actionsMenu = new ActionsMenu(100, 153, this);
-    this.enemyMenu = new EnemyMenu(8, 153, this);
-
-    // currently selected menu
-    this.currentMenu = this.actionsMenu;
-
-    // add menus to container
-    this.menus.add(this.heroesMenu);
-    this.menus.add(this.actionsMenu);
-    this.menus.add(this.enemyMenu);
-
-    this.battleScene = this.scene.get('BattleScene');
-
-    this.remapHeroes();
-    this.remapEnemies();
-
-    this.input.keyboard.on('keydown', this.onKeyInput, this);
-
-    this.battleScene.events.on("PlayerSelect", this.onPlayerSelect, this);
-
-    this.events.on("SelectEnemies", this.onSelectEnemies, this);
-
-    this.events.on("Enemy", this.onEnemy, this);
-
-    this.battleScene.nextTurn();
-  }
-}
+});
 
 const MenuItem = new Phaser.Class({
   Extends: Phaser.GameObjects.Text,
@@ -244,6 +145,7 @@ const MenuItem = new Phaser.Class({
   }
 
 });
+
 
 const Menu = new Phaser.Class({
   Extends: Phaser.GameObjects.Container, 
@@ -272,7 +174,7 @@ const Menu = new Phaser.Class({
     if (this.menuItemIndex < 0) {
       this.menuItemIndex = this.menuItems.length - 1;
     }
-    this.menuItems[this.menuItemsIndex].select();
+    this.menuItems[this.menuItemIndex].select();
   },
 
   moveSelectionDown: function() {
@@ -282,7 +184,7 @@ const Menu = new Phaser.Class({
     if (this.menuItemIndex >= this.menuItems.length) {
       this.menuItemIndex = 0;
     }
-    this.menuItems[this.menuItemsIndex].select();
+    this.menuItems[this.menuItemIndex].select();
   },
 
   select: function(index) {
@@ -304,7 +206,7 @@ const Menu = new Phaser.Class({
   },
 
   clear: function() {
-    for(let i =  0; i < this.menuItems.length; i++) {
+    for(let i = 0; i < this.menuItems.length; i++) {
       this.menuItems[i].destroy();
     }
     this.menuItems.length = 0;
@@ -320,16 +222,12 @@ const Menu = new Phaser.Class({
   }
 });
 
-/*
- Try to change these menues :'(
-*/
-
-const HeroMenu = new Phaser.Class({
+const HeroesMenu = new Phaser.Class({
   Extends: Menu,
 
   initialize:
 
-  function HeroMenu(x, y, scene) {
+  function HeroesMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
   }
 });
@@ -342,20 +240,18 @@ const ActionsMenu = new Phaser.Class({
   function ActionsMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
     this.addMenuItem('Attack');
-    this.addMenuItem('Heal');
-
   },
   confirm: function() {
     this.scene.events.emit('SelectEnemies');
   }
 });
 
-const EnemyMenu = new Phaser.Class({
+const EnemiesMenu = new Phaser.Class({
   Extends: Menu,
 
   initialize:
 
-  function EnemyMenu(x, y, scene) {
+  function EnemiesMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
   },
   confirm: function() {
@@ -363,7 +259,109 @@ const EnemyMenu = new Phaser.Class({
   }
 });
 
-const Message = new Phaser.Class({
+
+export const UIScene = new Phaser.Class({
+  Extends: Phaser.Scene,
+
+  initialize:
+
+  function UIScene() {
+    Phaser.Scene.call(this, { key: 'UIScene' });
+  },
+
+  create: function() {
+    console.debug('Create');
+
+    this.graphics = this.add.graphics();
+    this.graphics.lineStyle(1, 0xffffff);
+    this.graphics.fillStyle(0x031f4c, 1);
+    this.graphics.strokeRect(2, 150, 90, 100);
+    this.graphics.fillRect(2, 150, 90, 100);
+    this.graphics.strokeRect(95, 150, 90, 100);
+    this.graphics.fillRect(95, 150, 90, 100);
+    this.graphics.strokeRect(188, 150, 130, 100);
+    this.graphics.fillRect(188, 150, 130, 100);
+
+    // menu container
+    this.menus = this.add.container();
+
+    this.heroesMenu = new HeroesMenu(195, 153, this);
+    this.actionsMenu = new ActionsMenu(100, 153, this);
+    this.enemiesMenu = new EnemiesMenu(8, 153, this);
+
+    // currently selected menu
+    this.currentMenu = this.actionsMenu;
+
+    // add menus to container
+    this.menus.add(this.heroesMenu);
+    this.menus.add(this.actionsMenu);
+    this.menus.add(this.enemiesMenu);
+
+    this.battleScene = this.scene.get('BattleScene');
+
+    this.remapHeroes();
+    this.remapEnemies();
+
+    this.input.keyboard.on('keydown', this.onKeyInput, this);
+
+    this.battleScene.events.on("PlayerSelect", this.onPlayerSelect, this);
+
+    this.events.on("SelectEnemies", this.onSelectEnemies, this);
+
+    this.events.on("Enemy", this.onEnemy, this);
+
+    this.message = new Message(this, this.battleScene.events);
+    this.add.existing(this.message);
+    console.log('kuk', this.message);
+
+    this.battleScene.nextTurn();
+  },
+
+  onEnemy: function(index) {
+    this.heroesMenu.deselect();
+    this.actionsMenu.deselect();
+    this.enemiesMenu.deselect();
+    this.currentMenu = null;
+    this.battleScene.receivePlayerSelection('attack', index);
+  },
+
+  onPlayerSelect: function(id) {
+    this.heroesMenu.select(id);
+    this.actionsMenu.select(0);
+    this.currentMenu = this.actionsMenu;
+  },
+
+  onSelectEnemies: function() {
+    this.currentMenu = this.enemiesMenu;
+    this.enemiesMenu.select(0);
+  },
+
+  remapHeroes: function() {
+    let heroes = this.battleScene.heroes;
+    this.heroesMenu.reMap(heroes);
+  },
+
+  remapEnemies: function() {
+    let enemies = this.battleScene.enemies;
+    this.enemiesMenu.reMap(enemies);
+  },
+
+  onKeyInput: function(event) {
+    if(this.currentMenu) {
+      if(event.code === "ArrowUp") {
+          this.currentMenu.moveSelectionUp();
+      } else if(event.code === "ArrowDown") {
+          this.currentMenu.moveSelectionDown();
+      } else if(event.code === "ArrowRight" || event.code === "Shift") {
+
+      } else if(event.code === "Space" || event.code === "ArrowLeft") {
+          this.currentMenu.confirm();
+      } 
+    }
+  },
+});
+
+export const Message = new Phaser.Class({
 
   Extends: Phaser.GameObjects.Container,
 
@@ -383,6 +381,7 @@ const Message = new Phaser.Class({
     this.visible = false;
   },
   showMessage: function(text) {
+    console.log('inside show')
     this.text.setText(text);
     this.visible = true;
     if(this.hideEvent)
@@ -390,39 +389,8 @@ const Message = new Phaser.Class({
     this.hideEvent = this.scene.time.addEvent({ delay: 2000, callback: this.hideMessage, callbackScope: this });
 },
   hideMessage: function() {
+    console.log('inside hide')
     this.hideEvent = null;
     this.visible = false;
 }
 });
-
-/*
-export class HeroMenu extends Menu {
-  public constructor(x, y, scene) {
-    super(x, y, scene);
-    Menu.call(this, x, y, scene);
-  }
-}
-
-export class ActionsMenu extends Menu {
-  public constructor(x, y, scene) {
-    super(x, y, scene);
-    Menu.call(this, x, y, scene);
-    this.addMenuItem('Attack');
-  }
-  public confirm() {
-    this.scene.events.emit('SelectEnemies');
-    // do something when player selects an action
-  }
-}
-
-export class EnemyMenu extends Menu {
-  public constructor(x, y, scene) {
-    super(x, y, scene);
-    Menu.call(this, x, y, scene);
-  }
-  public confirm() {
-    this.scene.events.emit("Enemy", this.menuItemIndex);
-    // do something when player selects an enemy
-  }
-}
-*/
