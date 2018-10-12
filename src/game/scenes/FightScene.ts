@@ -111,6 +111,7 @@ const Unit = new Phaser.Class({
     if(this.hp <= 0) {
       this.hp = 0;
       this.alive = false;
+      console.log('penis')
     }
   }
 
@@ -122,6 +123,8 @@ const Enemy = new Phaser.Class({
   initialize:
   function Enemy(scene, x, y, texture, frame, type, hp, damage) {
     Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
+
+    this.setScale(0.5);
   }
 });
 
@@ -129,10 +132,10 @@ const PlayerCharacter = new Phaser.Class({
   Extends: Unit,
 
   initialize:
-  function Enemy(scene, x, y, texture, frame, type, hp, damage) {
+  function PlayerCharacter(scene, x, y, texture, frame, type, hp, damage) {
     Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
     // this.flipX = true;
-    // this.setScale(2);
+    this.setScale(0.5);
   }
 });
 
@@ -227,6 +230,7 @@ const Menu = new Phaser.Class({
     for(let i = 0; i < units.length; i++) {
       let unit = units[i];
       this.addMenuItem(unit.type);
+      // this.addMenuItem(unit.hp);
     }
   }
 });
