@@ -64,10 +64,10 @@ export const BattleScene = new Phaser.Class({
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 10, 3); // HP satt till 10 för att de ska dö som fan, var 50 nyss
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 100, 3); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 10, 3); // Samma sak här 
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 100, 3); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
@@ -86,7 +86,7 @@ export const BattleScene = new Phaser.Class({
 
   },
 
-  nextTurn: async function() {
+  nextTurn: function() {
     this.index++;
     // no more units? start from first
     if (this.index >= this.units.length) {
@@ -100,12 +100,13 @@ export const BattleScene = new Phaser.Class({
       if (this.units[this.index] instanceof PlayerCharacter) {
         this.events.emit('PlayerSelect', this.index);
       } else { // enemy unit
-        let r = Math.floor(Math.random() * this.heroes.length);
-        this.units[this.index].attack(this.heroes[r]);
+        // let r = Math.floor(Math.random() * this.heroes.length);
+        // this.units[this.index].attack(this.heroes[r]);
+        this.Tree();
         this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
 
         // Insert behaviour tree here?
-         this.Tree();
+         
 
       }
     }
@@ -125,32 +126,14 @@ export const BattleScene = new Phaser.Class({
 
   Tree: function() {
   console.log('Inside Tree')
-  /*
-
-    const myTask = Task({
-      run: function() {
-        console.log('shit');
-        return SUCCESS;
-      }
-    })
-
-    const tree = new Sequence({
-      nodes: [
-      myTask]
-    })
-
-    const bTree = new BehaviorTree({
-      tree: tree,
-      blackboard: {}
-    })
-
-    bTree.step();
-    */
+  
     const builder = new BehaviorTreeBuilder();
     this.tree = builder  
       .sequence("testSeq")
         .do("testAction", async (t) =>{
             console.log('testAction1111')
+            let r = Math.floor(Math.random() * this.heroes.length);
+            this.units[this.index].attack(this.heroes[r]);
 
             return BehaviorTreeStatus.Success;
         })
