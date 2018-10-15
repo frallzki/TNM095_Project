@@ -462,7 +462,7 @@ export const UIScene = new Phaser.Class({
       } else if(event.code === "ArrowRight" || event.code === "Shift") {
           //this.scene.start(ActionsMenu);
           //this.currentMenu.undo(); 
-          //Ingen av dem funkar :(     )
+          //Ingen av dem funkar :(     )  
           console.log('ArrowRight logged')
       } else if(event.code === "Space" || event.code === "ArrowLeft") {
           this.currentMenu.confirm();
