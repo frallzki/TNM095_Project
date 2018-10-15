@@ -1,4 +1,10 @@
 import { BlendModes, Scene } from 'phaser';
+import {BehaviorTreeBuilder, BehaviorTreeStatus, TimeData} from "fluent-behavior-tree";
+// import BehaviorTree, {Sequence, Task, SUCCESS, FAILURE }  from 'behaviortree';
+// const BehaviorTree = require('behaviortree');
+// const { Sequence, Task, SUCCESS, FAILURE } = BehaviorTree;
+require("babel-core/register");
+require("babel-polyfill");
 
 export const FightScene = new Phaser.Class({
   Extends: Phaser.Scene,
@@ -74,9 +80,13 @@ export const BattleScene = new Phaser.Class({
     this.scene.launch('UIScene');
   
     this.index = -1;
+
+    // needed?
+    // this.EnemyAI = this.scene.get('EnemyAI');
+
   },
 
-  nextTurn: function() {
+  nextTurn: async function() {
     this.index++;
     // no more units? start from first
     if (this.index >= this.units.length) {
@@ -93,6 +103,10 @@ export const BattleScene = new Phaser.Class({
         let r = Math.floor(Math.random() * this.heroes.length);
         this.units[this.index].attack(this.heroes[r]);
         this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
+
+        // Insert behaviour tree here?
+         this.Tree();
+
       }
     }
   },
@@ -107,7 +121,53 @@ export const BattleScene = new Phaser.Class({
       this.unit[this.index].elementalAttack(this.enemies[target]);
     }
     this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
-  }
+  },
+
+  Tree: function() {
+  console.log('Inside Tree')
+  /*
+
+    const myTask = Task({
+      run: function() {
+        console.log('shit');
+        return SUCCESS;
+      }
+    })
+
+    const tree = new Sequence({
+      nodes: [
+      myTask]
+    })
+
+    const bTree = new BehaviorTree({
+      tree: tree,
+      blackboard: {}
+    })
+
+    bTree.step();
+    */
+    const builder = new BehaviorTreeBuilder();
+    this.tree = builder  
+      .sequence("testSeq")
+        .do("testAction", async (t) =>{
+            console.log('testAction1111')
+
+            return BehaviorTreeStatus.Success;
+        })
+        .do("TestAction2", async (t) => {
+            console.log('testAction2222');
+            
+            return BehaviorTreeStatus.Failure;
+        })
+    .end()
+    .build();
+
+    this.tree.tick(3000);
+
+    
+  },
+
+  
 });
 
 const Unit = new Phaser.Class({
@@ -264,6 +324,7 @@ const Menu = new Phaser.Class({
     for(let i = 0; i < units.length; i++) {
       let unit = units[i];
       this.addMenuItem(unit.type);
+      // this.addMenuItem(unit.hp);
     }
   }
 });
