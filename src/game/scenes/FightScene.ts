@@ -11,10 +11,24 @@ export const FightScene = new Phaser.Class({
 
   preload: function() {
     console.debug('Preload');
+    /*
     this.load.image('hero1', 'assets/HeroFrall.png');
     this.load.image('hero2', 'assets/HeroLix.png');
     this.load.image('enemy1', 'assets/enmyTard.png');
     this.load.image('enemy2', 'assets/enmySpooks.png');
+    */
+    this.load.spritesheet('hero1_frames', 'assets/HeroFrall_frames.png', {
+      frameWidth: 96, 
+      frameHeight: 84});
+    this.load.spritesheet('hero2_frames', 'assets/HeroLix_frames.png', {
+      frameWidth: 96, 
+      frameHeight: 84});
+    this.load.spritesheet('enemy1_frames', 'assets/enmyTard_frames.png', {
+      frameWidth: 96, 
+      frameHeight: 84});
+    this.load.spritesheet('enemy2_frames', 'assets/enmySpooks_frames.png', {
+      frameWidth: 96, 
+      frameHeight: 84});
   },
 
   create: function() {
@@ -37,17 +51,17 @@ export const BattleScene = new Phaser.Class({
     this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
   
     // Heroes
-    const fralle = new PlayerCharacter(this, 250, 50, 'hero1', 1, 'Fralle', 100, 20);
+    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 100, 20);
     this.add.existing(fralle);
 
-    const felix = new PlayerCharacter(this, 250, 100, 'hero2', 4, 'Felix', 100, 20);
+    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 100, 20); 
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1', null, 'Spooks', 50, 3);
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 10, 3); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2', null, 'Tard', 50, 3);
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 10, 3); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
@@ -68,6 +82,9 @@ export const BattleScene = new Phaser.Class({
     if (this.index >= this.units.length) {
       this.index = 0;
     }
+    while (this.units[this.index].hp <= 0){
+      ++this.index;
+    }
     if (this.units[this.index]) {
       // if its player hero
       if (this.units[this.index] instanceof PlayerCharacter) {
@@ -82,8 +99,12 @@ export const BattleScene = new Phaser.Class({
 
   receivePlayerSelection: function(action, target) {
     if (action == 'attack') {
-      console.log('fjfl', this.index)
+      console.log('Normal', this.index)
       this.units[this.index].attack(this.enemies[target]);
+    }
+    if (action == 'elementalAttack') {
+      console.log('Elemental', this.index)
+      this.unit[this.index].elementalAttack(this.enemies[target]);
     }
     this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
   }
@@ -94,9 +115,10 @@ const Unit = new Phaser.Class({
 
   initialize:
 
-  function Unit(scene, x, y, texture, frame, type, hp, damage) {
+  function Unit(scene, x, y, texture, frame, type, element, hp, damage) {
     Phaser.GameObjects.Sprite.call(this, scene, x, y, texture, frame);
     this.type = type;
+    this.element = element;
     this.maxHp = this.hp = hp;
     this.damage = damage;
   },
@@ -105,13 +127,21 @@ const Unit = new Phaser.Class({
     target.takeDamage(this.damage);
     this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + " damage");
   },
+  elementalAttack: function(target) {
+    target.takeDamage(this.damage);
+    //this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + this.element + " damage");
+  },
 
   takeDamage: function(damage) {
     this.hp -= damage;
     if(this.hp <= 0) {
       this.hp = 0;
       this.alive = false;
+      console.log(this.type + " has died ")
+      this.scene.events.emit("Message", this.type + " has died "); // Does not emit attack message
+      this.setFrame(1);
     }
+    console.log(this.type + " has " + this.hp + " hp left ");
   }
 
 });
@@ -120,8 +150,9 @@ const Enemy = new Phaser.Class({
   Extends: Unit,
 
   initialize:
-  function Enemy(scene, x, y, texture, frame, type, hp, damage) {
-    Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
+  function Enemy(scene, x, y, texture, frame, type, element, hp, damage) {
+    Unit.call(this, scene, x, y, texture, frame, type, element, hp, damage);
+    this.setScale(0.5);
   }
 });
 
@@ -129,10 +160,10 @@ const PlayerCharacter = new Phaser.Class({
   Extends: Unit,
 
   initialize:
-  function Enemy(scene, x, y, texture, frame, type, hp, damage) {
-    Unit.call(this, scene, x, y, texture, frame, type, hp, damage);
+  function Enemy(scene, x, y, texture, frame, type, element, hp, damage) {
+    Unit.call(this, scene, x, y, texture, frame, type, element, hp, damage);
     // this.flipX = true;
-    // this.setScale(2);
+    this.setScale(0.5);
   }
 });
 
@@ -143,6 +174,7 @@ const MenuItem = new Phaser.Class({
 
   function MenuItem(x, y, text, scene) {
     Phaser.GameObjects.Text.call(this, scene, x, y, text, { color: '#ffffff', align: 'left', fontSize: 15 });
+    //console.log(this.hp); // this.hp är undefined
   },
 
   select: function () {
@@ -214,6 +246,11 @@ const Menu = new Phaser.Class({
     // when player selects, do the action
   },
 
+  undo: function() {
+    // When player wants to undo selection
+    this.currentMenu = this.ActionsMenu; //FUNGERAR INTE 
+  },
+
   clear: function() {
     for(let i = 0; i < this.menuItems.length; i++) {
       this.menuItems[i].destroy();
@@ -249,6 +286,7 @@ const ActionsMenu = new Phaser.Class({
   function ActionsMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
     this.addMenuItem('Attack');
+    this.addMenuItem('Attack 2');
   },
   confirm: function() {
     this.scene.events.emit('SelectEnemies');
@@ -321,7 +359,6 @@ export const UIScene = new Phaser.Class({
 
     this.message = new Message(this, this.battleScene.events);
     this.add.existing(this.message);
-    console.log('kuk', this.message);
 
     this.battleScene.nextTurn();
   },
@@ -362,7 +399,10 @@ export const UIScene = new Phaser.Class({
       } else if(event.code === "ArrowDown") {
           this.currentMenu.moveSelectionDown();
       } else if(event.code === "ArrowRight" || event.code === "Shift") {
-
+          //this.scene.start(ActionsMenu);
+          //this.currentMenu.undo(); 
+          //Ingen av dem funkar :(     )
+          console.log('ArrowRight logged')
       } else if(event.code === "Space" || event.code === "ArrowLeft") {
           this.currentMenu.confirm();
       } 
