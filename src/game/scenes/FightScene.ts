@@ -131,19 +131,15 @@ export const BattleScene = new Phaser.Class({
   
     const builder = new BehaviorTreeBuilder();
     this.tree = builder  
-      .sequence("testSeq")
-        .do("testAction", t => this.Test())
-        // .do("testAction", t => Test())
-        .do("TestAction2", async (t) => {
-            console.log('testAction2222');
-            
-            return BehaviorTreeStatus.Failure;
-        })
-    .end()
-    .build();
-
+      .selector("root")
+        .sequence("fightOrHeal")
+          .condition("currHealth", async t => this.checkHealth())
+          .do("heal", async t => this.Heal())
+        .end()
+        .do("regularAttack", async t => this.Test())
+      .end()
+    .build()
     this.tree.tick(3000);
-
   },
   Test: function() {
     console.log('test');
@@ -153,6 +149,24 @@ export const BattleScene = new Phaser.Class({
 
     return BehaviorTreeStatus.Success;
 
+  },
+
+  checkHealth: function() {
+    if(this.units[this.index].hp < 10) {
+      console.log('return tru')
+      return true;
+    } else {
+      console.log('return false')
+      return false;
+    }
+  },
+
+  Heal: function() {
+    console.log('before heal', this.units[this.index].hp)
+    this.units[this.index].hp + 10;
+    console.log('after heal', this.units[this.index].hp)
+
+    return BehaviorTreeStatus.Success;
   },
 
   
