@@ -57,17 +57,17 @@ export const BattleScene = new Phaser.Class({
     this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
   
     // Heroes
-    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 200, 20);
+    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 200, 20, 0);
     this.add.existing(fralle);
 
-    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 200, 20); 
+    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 200, 20, 0); 
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 200, 15); // HP satt till 10 för att de ska dö som fan, var 50 nyss
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 29, 15, 1); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 200, 15); // Samma sak här 
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 29, 15, 1); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
@@ -117,7 +117,7 @@ export const BattleScene = new Phaser.Class({
       this.units[this.index].attack(this.enemies[target]);
     }
     if (action == 'elementalAttack') {
-      this.unit[this.index].elementalAttack(this.enemies[target]);
+      this.units[this.index].elementalAttack(this.enemies[target]);
     }
     // let r = Math.floor(Math.random() * this.heroes.length);
     // this.units[this.index].attack(this.heroes[r]);
@@ -134,13 +134,12 @@ export const BattleScene = new Phaser.Class({
           .condition("currHealth", async t => this.checkHealth())
           .do("heal", async t => this.Heal())
         .end()
-        .do("regularAttack", async t => this.Test())
+        .do("regularAttack", async t => this.regularAttack())
       .end()
     .build()
     this.tree.tick(3000);
   },
-  Test: function() {
-    console.log('test');
+  regularAttack: function() {
     let r = Math.floor(Math.random() * this.heroes.length);
     
     this.units[this.index].attack(this.heroes[r]);
@@ -150,7 +149,7 @@ export const BattleScene = new Phaser.Class({
   },
 
   checkHealth: function() {
-    if(this.units[this.index].hp < 10) {
+    if(this.units[this.index].hp < 10 && this.units[this.index].healthPack > 0) {
       console.log('return tru')
       return true;
     } else {
@@ -161,13 +160,11 @@ export const BattleScene = new Phaser.Class({
 
   Heal: function() {
     console.log('before heal', this.units[this.index].hp)
-    this.units[this.index].hp + 10;
+    this.units[this.index].useHealthPack();
     console.log('after heal', this.units[this.index].hp)
 
     return BehaviorTreeStatus.Success;
   },
-
-  
 });
 
 const Unit = new Phaser.Class({
@@ -175,12 +172,13 @@ const Unit = new Phaser.Class({
 
   initialize:
 
-  function Unit(scene, x, y, texture, frame, type, element, hp, damage) {
+  function Unit(scene, x, y, texture, frame, type, element, hp, damage, healthPack) {
     Phaser.GameObjects.Sprite.call(this, scene, x, y, texture, frame);
     this.type = type;
     this.element = element;
     this.maxHp = this.hp = hp;
     this.damage = damage;
+    this.healthPack = healthPack
   },
 
   attack: function(target) {
@@ -190,6 +188,13 @@ const Unit = new Phaser.Class({
   elementalAttack: function(target) {
     target.takeDamage(this.damage);
     //this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + this.element + " damage");
+  },
+  useHealthPack: function() {
+    if(this.healthPack > 0) {
+      this.hp += 20;
+      this.scene.events.emit("Message", this.type + " used a health pack for 20 HP");
+      this.healthPack -= 1;
+    }
   },
 
   takeDamage: function(damage) {
@@ -202,7 +207,7 @@ const Unit = new Phaser.Class({
       this.setFrame(1);
     }
     console.log(this.type + " has " + this.hp + " hp left ");
-  }
+  },
 
 });
 
@@ -210,8 +215,8 @@ const Enemy = new Phaser.Class({
   Extends: Unit,
 
   initialize:
-  function Enemy(scene, x, y, texture, frame, type, element, hp, damage) {
-    Unit.call(this, scene, x, y, texture, frame, type, element, hp, damage);
+  function Enemy(scene, x, y, texture, frame, type, element, hp, damage, healthPack) {
+    Unit.call(this, scene, x, y, texture, frame, type, element, hp, damage, healthPack);
     this.setScale(0.5);
   }
 });
@@ -220,8 +225,8 @@ const PlayerCharacter = new Phaser.Class({
   Extends: Unit,
 
   initialize:
-  function Enemy(scene, x, y, texture, frame, type, element, hp, damage) {
-    Unit.call(this, scene, x, y, texture, frame, type, element, hp, damage);
+  function Enemy(scene, x, y, texture, frame, type, element, hp, damage, healthPack) {
+    Unit.call(this, scene, x, y, texture, frame, type, element, hp, damage, healthPack);
     // this.flipX = true;
     this.setScale(0.5);
   }
