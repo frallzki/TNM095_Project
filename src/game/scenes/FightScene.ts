@@ -57,17 +57,17 @@ export const BattleScene = new Phaser.Class({
     this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
   
     // Heroes
-    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 100, 20);
+    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 200, 20);
     this.add.existing(fralle);
 
-    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 100, 20); 
+    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 200, 20); 
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 100, 3); // HP satt till 10 för att de ska dö som fan, var 50 nyss
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 200, 15); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 100, 3); // Samma sak här 
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 200, 15); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
