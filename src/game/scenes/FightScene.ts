@@ -106,7 +106,7 @@ export const BattleScene = new Phaser.Class({
         this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
 
         // Insert behaviour tree here?
-         
+        
 
       }
     }
@@ -121,6 +121,8 @@ export const BattleScene = new Phaser.Class({
       console.log('Elemental', this.index)
       this.unit[this.index].elementalAttack(this.enemies[target]);
     }
+    // let r = Math.floor(Math.random() * this.heroes.length);
+    // this.units[this.index].attack(this.heroes[r]);
     this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
   },
 
@@ -130,13 +132,8 @@ export const BattleScene = new Phaser.Class({
     const builder = new BehaviorTreeBuilder();
     this.tree = builder  
       .sequence("testSeq")
-        .do("testAction", async (t) =>{
-            console.log('testAction1111')
-            let r = Math.floor(Math.random() * this.heroes.length);
-            this.units[this.index].attack(this.heroes[r]);
-
-            return BehaviorTreeStatus.Success;
-        })
+        .do("testAction", t => this.Test())
+        // .do("testAction", t => Test())
         .do("TestAction2", async (t) => {
             console.log('testAction2222');
             
@@ -147,7 +144,15 @@ export const BattleScene = new Phaser.Class({
 
     this.tree.tick(3000);
 
+  },
+  Test: function() {
+    console.log('test');
+    let r = Math.floor(Math.random() * this.heroes.length);
     
+    this.units[this.index].attack(this.heroes[r]);
+
+    return BehaviorTreeStatus.Success;
+
   },
 
   
@@ -474,7 +479,6 @@ export const Message = new Phaser.Class({
     this.visible = false;
   },
   showMessage: function(text) {
-    console.log('inside show')
     this.text.setText(text);
     this.visible = true;
     if(this.hideEvent)
@@ -482,7 +486,6 @@ export const Message = new Phaser.Class({
     this.hideEvent = this.scene.time.addEvent({ delay: 2000, callback: this.hideMessage, callbackScope: this });
 },
   hideMessage: function() {
-    console.log('inside hide')
     this.hideEvent = null;
     this.visible = false;
 }
