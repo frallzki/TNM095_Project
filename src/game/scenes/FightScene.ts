@@ -64,10 +64,10 @@ export const BattleScene = new Phaser.Class({
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 29, 15, 1); // HP satt till 10 för att de ska dö som fan, var 50 nyss
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 100, 15, 1); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 29, 15, 1); // Samma sak här 
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 100, 15, 1); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
@@ -81,8 +81,7 @@ export const BattleScene = new Phaser.Class({
   
     this.index = -1;
 
-    // needed?
-    // this.EnemyAI = this.scene.get('EnemyAI');
+    let setTarget;
 
   },
 
@@ -134,12 +133,56 @@ export const BattleScene = new Phaser.Class({
           .condition("currHealth", async t => this.checkHealth())
           .do("heal", async t => this.Heal())
         .end()
+
+        .sequence("chooseTarget")
+          .condition("checkWeakness", async t => this.checkWeakness())
+          .do("elementalAttack", async t => this.specialAttack())
+        .end()
+
         .do("regularAttack", async t => this.regularAttack())
       .end()
     .build()
     this.tree.tick(3000);
   },
+
+  checkWeakness: function() {
+    let currElement = this.units[this.index].element;
+    if(currElement == 'Normal') {
+      console.log('haha normie');
+      return false;
+    } else {
+      for(let i = 0; i < this.heroes.length; i++) {
+        console.log('inside for', i);
+
+        if(currElement == 'Fire' && this.heroes[i].element == 'Earth') {
+          console.log('im fire', i);
+          this.setTarget = i;
+          return true;
+        } else if(currElement == 'Water' && this.heroes[i].element == 'Fire') {
+          console.log('im water', i);
+          this.setTarget = i;
+          return true;
+        } else if(currElement == 'Earth' && this.heroes[i].element == 'Water') {
+          console.log('im earth', i);
+          this.setTarget = i;
+          return true;
+        }
+      }
+    }
+    console.log('why am i doing this?');
+    return false;
+  },
+
+  specialAttack: function() {
+    console.log('yay im special!', this.setTarget);
+    this.units[this.index].elementalAttack(this.heroes[this.setTarget]);
+
+    return BehaviorTreeStatus.Success;
+
+  },
+
   regularAttack: function() {
+    console.log('chucks! Im normal!');
     let r = Math.floor(Math.random() * this.heroes.length);
     
     this.units[this.index].attack(this.heroes[r]);
