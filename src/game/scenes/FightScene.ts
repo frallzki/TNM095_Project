@@ -114,11 +114,9 @@ export const BattleScene = new Phaser.Class({
 
   receivePlayerSelection: function(action, target) {
     if (action == 'attack') {
-      console.log('Normal', this.index)
       this.units[this.index].attack(this.enemies[target]);
     }
     if (action == 'elementalAttack') {
-      console.log('Elemental', this.index)
       this.unit[this.index].elementalAttack(this.enemies[target]);
     }
     // let r = Math.floor(Math.random() * this.heroes.length);
@@ -296,7 +294,7 @@ const Menu = new Phaser.Class({
 
   undo: function() {
     // When player wants to undo selection
-    this.currentMenu = this.ActionsMenu; //FUNGERAR INTE 
+    //this.currentMenu = this.ActionsMenu; //FUNGERAR INTE 
   },
 
   clear: function() {
@@ -312,7 +310,7 @@ const Menu = new Phaser.Class({
     for(let i = 0; i < units.length; i++) {
       let unit = units[i];
       this.addMenuItem(unit.type);
-      // this.addMenuItem(unit.hp);
+      //this.addMenuItem(unit.hp);
     }
   }
 });
@@ -335,7 +333,8 @@ const ActionsMenu = new Phaser.Class({
   function ActionsMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
     this.addMenuItem('Attack');
-    this.addMenuItem('Attack 2');
+    this.addMenuItem('Elemental');
+    this.addMenuItem('Defencive');
   },
   confirm: function() {
     this.scene.events.emit('SelectEnemies');
@@ -448,9 +447,8 @@ export const UIScene = new Phaser.Class({
       } else if(event.code === "ArrowDown") {
           this.currentMenu.moveSelectionDown();
       } else if(event.code === "ArrowRight" || event.code === "Shift") {
-          //this.scene.start(ActionsMenu);
-          //this.currentMenu.undo(); 
-          //Ingen av dem funkar :(     )  
+          //this.scene.start(ActionsMenu); // Does nothing
+          //this.currentMenu.clear(); // Breaks things
           console.log('ArrowRight logged')
       } else if(event.code === "Space" || event.code === "ArrowLeft") {
           this.currentMenu.confirm();
