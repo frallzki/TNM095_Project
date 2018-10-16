@@ -57,17 +57,17 @@ export const BattleScene = new Phaser.Class({
     this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
   
     // Heroes
-    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 100, 20);
+    const fralle = new PlayerCharacter(this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 200, 20);
     this.add.existing(fralle);
 
-    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 100, 20); 
+    const felix = new PlayerCharacter(this, 250, 100, 'hero2_frames', 0, 'Felix', 'Fire', 200, 20); 
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 100, 3); // HP satt till 10 för att de ska dö som fan, var 50 nyss
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 200, 15); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 100, 3); // Samma sak här 
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 200, 15); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
@@ -114,11 +114,9 @@ export const BattleScene = new Phaser.Class({
 
   receivePlayerSelection: function(action, target) {
     if (action == 'attack') {
-      console.log('Normal', this.index)
       this.units[this.index].attack(this.enemies[target]);
     }
     if (action == 'elementalAttack') {
-      console.log('Elemental', this.index)
       this.unit[this.index].elementalAttack(this.enemies[target]);
     }
     // let r = Math.floor(Math.random() * this.heroes.length);
@@ -310,7 +308,7 @@ const Menu = new Phaser.Class({
 
   undo: function() {
     // When player wants to undo selection
-    this.currentMenu = this.ActionsMenu; //FUNGERAR INTE 
+    //this.currentMenu = this.ActionsMenu; //FUNGERAR INTE 
   },
 
   clear: function() {
@@ -326,7 +324,7 @@ const Menu = new Phaser.Class({
     for(let i = 0; i < units.length; i++) {
       let unit = units[i];
       this.addMenuItem(unit.type);
-      // this.addMenuItem(unit.hp);
+      //this.addMenuItem(unit.hp);
     }
   }
 });
@@ -349,7 +347,8 @@ const ActionsMenu = new Phaser.Class({
   function ActionsMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
     this.addMenuItem('Attack');
-    this.addMenuItem('Attack 2');
+    this.addMenuItem('Elemental');
+    this.addMenuItem('Defencive');
   },
   confirm: function() {
     this.scene.events.emit('SelectEnemies');
@@ -462,9 +461,8 @@ export const UIScene = new Phaser.Class({
       } else if(event.code === "ArrowDown") {
           this.currentMenu.moveSelectionDown();
       } else if(event.code === "ArrowRight" || event.code === "Shift") {
-          //this.scene.start(ActionsMenu);
-          //this.currentMenu.undo(); 
-          //Ingen av dem funkar :(     )
+          //this.scene.start(ActionsMenu); // Does nothing
+          //this.currentMenu.clear(); // Breaks things
           console.log('ArrowRight logged')
       } else if(event.code === "Space" || event.code === "ArrowLeft") {
           this.currentMenu.confirm();
