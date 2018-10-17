@@ -1,6 +1,6 @@
 import { GameScene } from '@/scenes/GameScene';
 import { FightScene, BattleScene, UIScene, EnemyAI } from '@/scenes/FightScene';
-//import { EnemyAI } from '@/scenes/BehaviouTree';
+// import { EnemyAI } from '@/scenes/BehaviouTree';
 
 /**
  * Phaser game config
