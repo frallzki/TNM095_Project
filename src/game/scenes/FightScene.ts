@@ -64,10 +64,10 @@ export const BattleScene = new Phaser.Class({
     this.add.existing(felix);
   
     // Enemies
-    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 100, 15, 1); // HP satt till 10 för att de ska dö som fan, var 50 nyss
+    const spooks = new Enemy(this, 50, 50, 'enemy1_frames', 0, 'Tard', 'Normal', 29, 15, 1); // HP satt till 10 för att de ska dö som fan, var 50 nyss
     this.add.existing(spooks);
 
-    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 100, 15, 1); // Samma sak här 
+    const tard = new Enemy(this, 50, 100, 'enemy2_frames', 0, 'Spooks', 'Earth', 29, 15, 1); // Samma sak här 
     this.add.existing(tard);
   
     this.heroes = [fralle, felix];
@@ -416,7 +416,7 @@ const ActionsMenu = new Phaser.Class({
     Menu.call(this, x, y, scene);
     this.addMenuItem('Attack');
     this.addMenuItem('Elemental');
-    this.addMenuItem('Defencive');
+    // this.addMenuItem('Defencive');
   },
 
   create: function() {
