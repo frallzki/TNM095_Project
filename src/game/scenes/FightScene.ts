@@ -116,7 +116,7 @@ export const BattleScene = new Phaser.Class({
       this.units[this.index].attack(this.enemies[target]);
     }
     if (action == 'elementalAttack') {
-      this.units[this.index].elementalAttack(this.enemies[target]);
+      this.units[this.index].elementalAttack(this.enemies[target], this.units[this.index].element);
     }
     // let r = Math.floor(Math.random() * this.heroes.length);
     // this.units[this.index].attack(this.heroes[r]);
@@ -175,7 +175,7 @@ export const BattleScene = new Phaser.Class({
 
   specialAttack: function() {
     console.log('yay im special!', this.setTarget);
-    this.units[this.index].elementalAttack(this.heroes[this.setTarget]);
+    this.units[this.index].elementalAttack(this.heroes[this.setTarget], this.units[this.index].element);
 
     return BehaviorTreeStatus.Success;
 
@@ -184,7 +184,6 @@ export const BattleScene = new Phaser.Class({
   regularAttack: function() {
     console.log('chucks! Im normal!');
     let r = Math.floor(Math.random() * this.heroes.length);
-    
     this.units[this.index].attack(this.heroes[r]);
 
     return BehaviorTreeStatus.Success;
@@ -228,8 +227,29 @@ const Unit = new Phaser.Class({
     target.takeDamage(this.damage);
     this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + " damage");
   },
-  elementalAttack: function(target) {
-    target.takeDamage(this.damage);
+
+  elementalAttack: function(target, elmnt) {
+    let weakAttack = this.damage -5;
+    let strongAttack = this.damage + 5;
+    if(elmnt == 'normal' || target.element == 'Normal') {
+      target.takeDamage(this.damage);
+      this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + " damage");
+    } else if(elmnt == 'Fire' && target.element == 'Water') {
+      target.takeDamage(weakAttack);
+      this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + weakAttack  + " " + this.element + " damage");
+    } else if(elmnt == 'Water' && target.element == 'Earth') {
+      target.takeDamage(weakAttack);
+      this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + weakAttack  + " " + this.element + " damage");
+    } else if(elmnt == 'Earth' && target.element == 'Fire') {
+      target.takeDamage(weakAttack);  
+     this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + weakAttack  + " " + this.element + " damage");
+    } else {
+      console.log('dmg', this.damage);
+      target.takeDamage(strongAttack);
+      this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + strongAttack + " " + this.element + " damage");
+    }
+
+    //target.takeDamage(this.damage);
     //this.scene.events.emit("Message", this.type + " attacks " + target.type + " for " + this.damage + this.element + " damage");
   },
   useHealthPack: function() {
@@ -398,7 +418,14 @@ const ActionsMenu = new Phaser.Class({
     this.addMenuItem('Elemental');
     this.addMenuItem('Defencive');
   },
+
+  create: function() {
+    let choice;
+  },
+
   confirm: function() {
+    console.log('hello', this.menuItemIndex);
+    this.choice = this.menuItemIndex;
     this.scene.events.emit('SelectEnemies');
   }
 });
@@ -411,6 +438,7 @@ const EnemiesMenu = new Phaser.Class({
   function EnemiesMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
   },
+
   confirm: function() {
     this.scene.events.emit("Enemy", this.menuItemIndex);
   }
@@ -474,11 +502,19 @@ export const UIScene = new Phaser.Class({
   },
 
   onEnemy: function(index) {
+    console.log('on enmy', this.actionsMenu.choice);
     this.heroesMenu.deselect();
     this.actionsMenu.deselect();
     this.enemiesMenu.deselect();
     this.currentMenu = null;
-    this.battleScene.receivePlayerSelection('attack', index);
+    if(this.actionsMenu.choice == 0) {
+      console.log('this is normal');
+      this.battleScene.receivePlayerSelection('attack', index);
+    } else if(this.actionsMenu.choice == 1) {
+      console.log('this is elemental');
+      this.battleScene.receivePlayerSelection('elementalAttack', index);
+    }
+    // this.battleScene.receivePlayerSelection('attack', index);
   },
 
   onPlayerSelect: function(id) {
@@ -488,6 +524,8 @@ export const UIScene = new Phaser.Class({
   },
 
   onSelectEnemies: function() {
+    console.log('kuk', this.currentMenu.list[0]._text);
+
     this.currentMenu = this.enemiesMenu;
     this.enemiesMenu.select(0);
   },
