@@ -7,7 +7,7 @@ const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
 
 module.exports = {
   entry: {
-    app: './src/index.ts',
+    app: ['./src/index.ts', 'babel-polyfill']
   },
   devtool: 'source-map',
   module: {
@@ -67,7 +67,7 @@ module.exports = {
         to: './',
       },
       {
-        context: './src/assets/',
+        context: './src/game/assets/',
         from: '**/*',
         to: 'assets/',
       }

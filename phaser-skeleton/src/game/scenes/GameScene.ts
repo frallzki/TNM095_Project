@@ -13,12 +13,11 @@ export class GameScene extends Phaser.Scene {
   public preload(): void {
     console.debug('Preload');
 
-    this.load.setBaseURL('http://labs.phaser.io');
-
-    this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-    this.load.image('red', 'assets/particles/red.png');
+    // this.load.image('face', 'assets/FaceMan.png');
+    // this.load.setBaseURL('http://labs.phaser.io');
+    // this.load.image('logo', 'assets/sprites/phaser3-logo.png');
+    // this.load.image('red', 'assets/particles/red.png');
   }
-
   /**
    * Phaser create method
    * Initialize scene objects
@@ -26,7 +25,11 @@ export class GameScene extends Phaser.Scene {
    */
   public create(): void {
     console.debug('Create');
+    // this.mazeGraphics = this.add.graphics; ??
 
+  }
+
+    /*
     // Add particles with using asset "red"
     const particles = this.add.particles('red');
 
@@ -38,10 +41,11 @@ export class GameScene extends Phaser.Scene {
     });
 
     // Add logotype
-    const logo = this.physics.add.image(512, 288, 'logo');
+    const logo = this.physics.add.image(512, 288, 'face');
     logo.setCollideWorldBounds(true);
 
     // Make particles follow the logotype
     emitter.startFollow(logo);
-  }
+    */
+
 }
