@@ -254,7 +254,7 @@ const unit = new Phaser.Class({
       this.scene.events
         .emit('Messge', `${this.type} attacks ${target.type} for ${weakAttack} ${this.element} damage`);
     } else {
-      console.log('dmg', this.damage);
+      console.log('dmg', strongAttack);
       target.takeDamage(strongAttack);
       this.scene.events
         .emit('Message', `${this.type} attacks ${target.type} for ${strongAttack} ${this.element} damage`);
@@ -476,11 +476,11 @@ const EnemiesMenu = new Phaser.Class({
   }
 });
 
-const pauseMenu = new Phaser.Class({
+const PauseMenu = new Phaser.Class({
   Extends: Menu,
 
   initialize:
-  function pauseMenu(x, y, scene) {
+  function PauseMenu(x, y, scene) {
     Menu.call(this, x, y, scene);
     this.addMenuItem('Restart');
     this.addMenuItem('Do nothing');
@@ -633,7 +633,7 @@ export const pauseScene = new Phaser.Class({
 
     this.pauseMenu = new pauseMenu(195, 153, this);
   },
-  
+
 });
 */
 export const Message = new Phaser.Class({
