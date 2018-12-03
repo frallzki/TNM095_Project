@@ -1,5 +1,6 @@
 import { GameScene, WorldScene } from '@/scenes/GameScene';
 import { FightScene, BattleScene, UIScene } from '@/scenes/FightScene';
+import { MenuScene } from '@/scenes/MenuScene';
 // import { EnemyAI } from '@/scenes/BehaviouTree';
 
 /**
@@ -8,7 +9,8 @@ import { FightScene, BattleScene, UIScene } from '@/scenes/FightScene';
 export const phaserConfig: GameConfig = {
   parent: 'app', // content??
   type: Phaser.AUTO, // AUTO
-  scene: [GameScene,
+  scene: [MenuScene,
+          GameScene,
           WorldScene,
           FightScene,
           BattleScene,

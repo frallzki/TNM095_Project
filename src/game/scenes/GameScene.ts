@@ -1,18 +1,14 @@
 import { BlendModes } from 'phaser';
 
-/**
- * Sample Phaser scene
- * @extends {Phaser.Scene}
- */
 export const GameScene = new Phaser.Class({
  
   Extends: Phaser.Scene,
 
   initialize:
 
-  function BootScene ()
+  function GameScene ()
   {
-      Phaser.Scene.call(this, { key: 'BootScene' });
+      Phaser.Scene.call(this, { key: 'GameScene' });
   },
 
   preload: function () {
