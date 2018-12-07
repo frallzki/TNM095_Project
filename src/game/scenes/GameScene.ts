@@ -20,6 +20,7 @@ export const GameScene = new Phaser.Class({
       
       // our two characters
       this.load.spritesheet('player', 'assets/RPG_assets.png', { frameWidth: 16, frameHeight: 16 });
+      
   },
 
   create: function () {
@@ -149,7 +150,7 @@ export const WorldScene = new Phaser.Class({
     
     this.cameras.main.shake(300);
 
-    this.scene.start('FightScene');
+    this.scene.switch('BattleScene');
 
   }
 

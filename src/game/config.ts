@@ -12,7 +12,6 @@ export const phaserConfig: GameConfig = {
   scene: [MenuScene,
           GameScene,
           WorldScene,
-          FightScene,
           BattleScene,
           UIScene], // GameScene
   width: 320, // 1024

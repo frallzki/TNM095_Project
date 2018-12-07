@@ -6,6 +6,8 @@ import { BehaviorTreeBuilder, BehaviorTreeStatus, TimeData } from 'fluent-behavi
 require('babel-core/register');
 require('babel-polyfill');
 
+
+
 export const FightScene = new Phaser.Class({
   Extends: Phaser.Scene,
 
@@ -52,10 +54,60 @@ export const BattleScene = new Phaser.Class({
     Phaser.Scene.call(this, { key: 'BattleScene' });
   },
 
+  preload() {
+    console.debug('Preload');
+    /*
+    this.load.image('hero1', 'assets/HeroFrall.png');
+    this.load.image('hero2', 'assets/HeroLix.png');
+    this.load.image('enemy1', 'assets/enmyTard.png');
+    this.load.image('enemy2', 'assets/enmySpooks.png');
+    */
+    this.load.spritesheet('hero1_frames', 'assets/HeroFrall_frames.png', {
+      frameWidth: 96,
+      frameHeight: 84});
+    this.load.spritesheet('hero2_frames', 'assets/HeroLix_frames.png', {
+      frameWidth: 96,
+      frameHeight: 84});
+    this.load.spritesheet('enemy1_frames', 'assets/enmyTard_frames.png', {
+      frameWidth: 96,
+      frameHeight: 84});
+    this.load.spritesheet('enemy2_frames', 'assets/enmySpooks_frames.png', {
+      frameWidth: 96,
+      frameHeight: 84});
+  },
+
   create() {
     console.debug('Create');
     this.cameras.main.setBackgroundColor('rgba(0, 200, 0, 0.5)');
+    this.startBattle();
+    
+    this.sys.events.on('wake', this.startBattle, this);
+  },
 
+  nextTurn() {
+    if(this.checkEndBattle()) {
+      this.endBattle();
+      return;
+    }
+
+    do {
+      this.index++;
+      if(this.index >= this.units.length) {
+        this.index = 0;
+      }
+    } while(!this.units[this.index].alive);
+
+    if (this.units[this.index] instanceof PlayerCharacter) {
+      this.events.emit('PlayerSelect', this.index);
+    } else { // enemy unit
+      // let r = Math.floor(Math.random() * this.heroes.length);
+      // this.units[this.index].attack(this.heroes[r]);
+      this.Tree();
+      this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
+    }
+  },
+
+  startBattle() {
     // Heroes
     const fralle = new PlayerCharacter(
       this, 250, 50, 'hero1_frames', 0, 'Fralle', 'Water', 200, 30, 1);
@@ -68,11 +120,11 @@ export const BattleScene = new Phaser.Class({
 
     // Enemies
     const spooks = new Enemy(
-      this, 50, 50, 'enemy1_frames', 0, 'Spooks', 'Normal', 150, 30, 1);
+      this, 50, 50, 'enemy1_frames', 0, 'Spooks', 'Normal', 10, 30, 1);
     this.add.existing(spooks);
 
     const zombs = new Enemy( // HP SET TO 9
-      this, 50, 100, 'enemy2_frames', 0, 'Zombs', 'Earth', 150, 30, 1);
+      this, 50, 100, 'enemy2_frames', 0, 'Zombs', 'Earth', 10, 30, 1);
     this.add.existing(zombs);
 
     this.heroes = [fralle, felix];
@@ -81,35 +133,51 @@ export const BattleScene = new Phaser.Class({
 
     this.units = this.heroes.concat(this.enemies);
 
-    // Run UI scene at the same time
-    this.scene.launch('UIScene');
-
     this.index = -1;
-    // const setTarget;
+
+    // Run UI scene at the same time
+    this.scene.run('UIScene');
+
   },
 
-  nextTurn() {
-    this.index += 1;
-    // no more units? start from first
-    if (this.index >= this.units.length) {
-      this.index = 0;
-    }
-    while (this.units[this.index].hp <= 0) {
-      this.index += 1;
-    }
-    if (this.units[this.index]) {
-      // if its player hero
-      if (this.units[this.index] instanceof PlayerCharacter) {
-        this.events.emit('PlayerSelect', this.index);
-      } else { // enemy unit
-        // let r = Math.floor(Math.random() * this.heroes.length);
-        // this.units[this.index].attack(this.heroes[r]);
-        this.Tree();
-        this.time.addEvent({ delay: 3000, callback: this.nextTurn, callbackScope: this });
+  checkEndBattle() {
+    let win = true;
 
-        // Insert behaviour tree here?
+    for(let i = 0; i < this.enemies.length; i++) {
+      if(this.enemies[i].alive) {
+        win = false;
       }
     }
+
+    let loose = true;
+    for(let i = 0; i < this.heroes.length; i++) {
+      if(this.heroes[i].alive) {
+        loose = false;
+      }
+    }
+    return win || loose;
+  },
+
+  endBattle() {
+    this.heroes.length = 0;
+    this.heroes.length = 0;
+
+    for(var i = 0; i < this.units.length; i++) {
+      this.units[i].destroy();
+    }
+    this.units.length = 0;
+    this.scene.sleep('UIScene');
+    this.scene.switch('WorldScene');
+  },
+
+  exitBattle() {
+    this.scene.sleep('UIScene');
+    this.scene.switch('WorldScene');
+  },
+
+  wake() {
+    this.scene.run('UIScene');
+    this.time.addEvent({delay: 2000, callback: this.exitBattle, callbackScope: this});        
   },
 
   receivePlayerSelection(action, target) {
@@ -225,16 +293,24 @@ const unit = new Phaser.Class({
     this.element = element;
     this.maxHp = this.hp = hp;
     this.damage = damage;
+    this.alive = true;
     this.healthPack = healthPack;
   },
 
+  setMenuItem(item) {
+    this.menuItem = item;
+  },
+
   attack(target) {
-    target.takeDamage(this.damage);
-    this.scene.events.emit('Message',
-    `${this.type} attacks ${target.type} with a regular attack`);
+    if(target.alive) {
+      target.takeDamage(this.damage);
+      this.scene.events.emit('Message',
+      `${this.type} attacks ${target.type} with a regular attack`);
+    }
   },
 
   elementalAttack(target, element) {
+  if(target.alive) {
     const weakAttack = this.damage - 5;
     const strongAttack = this.damage + 5;
     if (element === 'Normal' || target.element === 'Normal') {
@@ -263,6 +339,7 @@ const unit = new Phaser.Class({
     // this.scene.events
     //  .emit('Message',
     //  this.type + ' attacks ' + target.type + ' for ' + this.damage + this.element + ' damage');
+  }
   },
   useHealthPack() {
     if (this.healthPack > 0) {
@@ -322,6 +399,10 @@ const MenuItem = new Phaser.Class({
 
   deselect () {
     this.setColor('#ffffff');
+  },
+
+  unitKilled() {
+    this.active = false;
   }
 
 });
@@ -344,42 +425,80 @@ const Menu = new Phaser.Class({
     const menuItem = new MenuItem(0, this.menuItems.length * 20, unit, this.scene);
     this.menuItems.push(menuItem);
     this.add(menuItem);
+    return menuItem;
   },
 
   moveSelectionUp() {
     this.menuItems[this.menuItemIndex].deselect();
+    do {
+      this.menuItemIndex--;
+      if(this.menuItemIndex < 0) {
+        this.menuItemIndex = this.menuItems.length - 1;
+      }
+    } while(!this.menuItems[this.menuItemIndex].active);
+    this.menuItems[this.menuItemIndex].select();
+
+    /*
     this.menuItemIndex -= 1;
 
     if (this.menuItemIndex < 0) {
       this.menuItemIndex = this.menuItems.length - 1;
     }
     this.menuItems[this.menuItemIndex].select();
+    */
   },
 
   moveSelectionDown() {
     this.menuItems[this.menuItemIndex].deselect();
+    do {
+      this.menuItemIndex++;
+      if(this.menuItemIndex > this.menuItems.length) {
+        this.menuItemIndex = 0;
+      } 
+    } while(!this.menuItems[this.menuItemIndex].active);
+    this.menuItems[this.menuItemIndex].select();
+    
+    /*
     this.menuItemIndex += 1;
 
     if (this.menuItemIndex >= this.menuItems.length) {
       this.menuItemIndex = 0;
     }
     this.menuItems[this.menuItemIndex].select();
+    */
   },
 
   select(index) {
+
+    if(!index)
+            index = 0;       
+        this.menuItems[this.menuItemIndex].deselect();
+        this.menuItemIndex = index;
+        while(!this.menuItems[this.menuItemIndex].active) {
+            this.menuItemIndex++;
+            if(this.menuItemIndex >= this.menuItems.length)
+                this.menuItemIndex = 0;
+            if(this.menuItemIndex == index)
+                return;
+        }        
+        this.menuItems[this.menuItemIndex].select();
+        this.selected = true;
+
     /*
     if (!index) {
       index = 0;
     }
-    */
+    
     this.menuItems[this.menuItemIndex].deselect();
     this.menuItemIndex = index;
     this.menuItems[this.menuItemIndex].select();
+    */
   },
 
   deselect() {
     this.menuItems[this.menuItemIndex].deselect();
     this.menuItemIndex = 0;
+    this.selected = false;
   },
 
   confirm() {
@@ -401,11 +520,13 @@ const Menu = new Phaser.Class({
 
   reMap(units) {
     this.clear();
-    for (let i = 0; i < units.length; i += 1) {
+    for (let i = 0; i < units.length; i++) {
       const unit = units[i];
-      this.addMenuItem(unit.type);
+      unit.setMenuItem(this.addMenuItem(unit.type));
+      //this.addMenuItem(unit.type);
       // this.addMenuItem(unit.hp);
     }
+    this.menuItemIndex = 0;
   }
 });
 
@@ -530,9 +651,11 @@ export const UIScene = new Phaser.Class({
 
     this.battleScene = this.scene.get('BattleScene');
 
+    /*
     this.remapHeroes();
     this.remapEnemies();
-
+    */
+   
     this.input.keyboard.on('keydown', this.onKeyInput, this);
 
     this.battleScene.events.on('PlayerSelect', this.onPlayerSelect, this);
@@ -541,9 +664,18 @@ export const UIScene = new Phaser.Class({
 
     this.events.on('Enemy', this.onEnemy, this);
 
+    this.sys.events.on('wake', this.createMenu, this);
+
     this.message = new Message(this, this.battleScene.events);
     this.add.existing(this.message);
 
+    //this.battleScene.nextTurn();
+    this.createMenu();
+  },
+
+  createMenu() {
+    this.remapHeroes();
+    this.remapEnemies();
     this.battleScene.nextTurn();
   },
 
@@ -608,6 +740,7 @@ export const UIScene = new Phaser.Class({
       }
     }
   },
+
 });
 /*
 export const pauseScene = new Phaser.Class({
