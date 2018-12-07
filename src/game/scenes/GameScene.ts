@@ -1,51 +1,157 @@
 import { BlendModes } from 'phaser';
 
-/**
- * Sample Phaser scene
- * @extends {Phaser.Scene}
- */
-export class GameScene extends Phaser.Scene {
-  /**
-   * Phaser preload method
-   * Called before scene is created
-   * @returns {void}
-   */
-  public preload(): void {
-    console.debug('Preload');
+export const GameScene = new Phaser.Class({
+ 
+  Extends: Phaser.Scene,
 
-    // this.load.image('face', 'assets/FaceMan.png');
-    // this.load.setBaseURL('http://labs.phaser.io');
-    // this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-    // this.load.image('red', 'assets/particles/red.png');
+  initialize:
+
+  function GameScene ()
+  {
+      Phaser.Scene.call(this, { key: 'GameScene' });
+  },
+
+  preload: function () {
+      // map tiles
+      this.load.image('tiles', 'assets/map/spritesheet.png');
+        
+      // map in json format
+      this.load.tilemapTiledJSON('map', 'assets/map/map.json');
+      
+      // our two characters
+      this.load.spritesheet('player', 'assets/RPG_assets.png', { frameWidth: 16, frameHeight: 16 });
+      
+  },
+
+  create: function () {
+      this.scene.start('WorldScene');
   }
-  /**
-   * Phaser create method
-   * Initialize scene objects
-   * @returns {void}
-   */
-  public create(): void {
-    console.debug('Create');
-    // this.mazeGraphics = this.add.graphics; ??
+});
 
-  }
+export const WorldScene = new Phaser.Class({
 
-    /*
-    // Add particles with using asset "red"
-    const particles = this.add.particles('red');
+  Extends: Phaser.Scene,
 
-    // Create particle emitter
-    const emitter = particles.createEmitter({
-      speed: 100,
-      scale: { start: 1, end: 0 },
-      blendMode: BlendModes.ADD
+  initialize:
+
+  function WorldScene ()
+  {
+      Phaser.Scene.call(this, { key: 'WorldScene' });
+  },
+  preload: function ()
+  {
+      
+  },
+  create: function () {
+    var map = this.make.tilemap({ key: 'map' });
+
+    var tiles = map.addTilesetImage('spritesheet', 'tiles');
+        
+	  var grass = map.createStaticLayer('Grass', tiles, 0, 0);
+    var obstacles = map.createStaticLayer('Obstacles', tiles, 0, 0);
+    obstacles.setCollisionByExclusion([-1]);
+
+    this.player = this.physics.add.sprite(50, 100, 'player', 6);
+
+    this.physics.world.bounds.width = map.widthInPixels;
+    this.physics.world.bounds.height = map.heightInPixels;
+    this.player.setCollideWorldBounds(true);
+
+    this.cursor = this.input.keyboard.createCursorKeys();
+
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.cameras.main.startFollow(this.player);
+    this.cameras.main.roundPixels = true;
+
+    //  animation with key 'left', we don't need left and right as we will use one and flip the sprite
+    this.anims.create({
+      key: 'left',
+      frames: this.anims.generateFrameNumbers('player', { frames: [1, 7, 1, 13]}),
+      frameRate: 10,
+      repeat: -1
+    });
+  
+    // animation with key 'right'
+    this.anims.create({
+      key: 'right',
+      frames: this.anims.generateFrameNumbers('player', { frames: [1, 7, 1, 13] }),
+      frameRate: 10,
+      repeat: -1
+     });
+    this.anims.create({
+      key: 'up',
+      frames: this.anims.generateFrameNumbers('player', { frames: [2, 8, 2, 14]}),
+      frameRate: 10,
+      repeat: -1
+    });
+    this.anims.create({
+      key: 'down',
+      frames: this.anims.generateFrameNumbers('player', { frames: [ 0, 6, 0, 12 ] }),
+      frameRate: 10,
+      repeat: -1
     });
 
-    // Add logotype
-    const logo = this.physics.add.image(512, 288, 'face');
-    logo.setCollideWorldBounds(true);
+    this.physics.add.collider(this.player, obstacles);
 
-    // Make particles follow the logotype
-    emitter.startFollow(logo);
-    */
+    this.spawns = this.physics.add.group({ classType: Phaser.GameObjects.Zone });
+    for(let i = 0; i < 30; i++){
+      var x = Phaser.Math.RND.between(0, this.physics.world.bounds.width);
+      var y = Phaser.Math.RND.between(0, this.physics.world.bounds.height);
+      this.spawns.create(x, y, 20, 20);
+    }
+    this.physics.add.overlap(this.player, this.spawns, this.onEnemyMeet, false, this);
 
-}
+  },
+
+  update(time, delta) {
+    this.player.body.setVelocity(0);
+
+    if(this.cursor.left.isDown) {
+      this.player.body.setVelocityX(-80);
+    }
+    else if(this.cursor.right.isDown) {
+      this.player.body.setVelocityX(80);
+    }
+
+    
+    if(this.cursor.up.isDown) {
+      this.player.body.setVelocityY(-80);
+    }
+    else if(this.cursor.down.isDown) {
+      this.player.body.setVelocityY(80);
+    }
+
+    if (this.cursor.left.isDown)
+        {
+            this.player.anims.play('left', true);
+        }
+        else if (this.cursor.right.isDown)
+        {
+            this.player.anims.play('right', true);
+        }
+        else if (this.cursor.up.isDown)
+        {
+            this.player.anims.play('up', true);
+        }
+        else if (this.cursor.down.isDown)
+        {
+            this.player.anims.play('down', true);
+        }
+        else
+        {
+            this.player.anims.stop();
+        }
+  },
+
+  onEnemyMeet(player, zone) {
+    // start battle
+    zone.x = Phaser.Math.RND.between(0, this.physics.world.bounds.width);
+    zone.y = Phaser.Math.RND.between(0, this.physics.world.bounds.height); 
+    
+    this.cameras.main.shake(300);
+
+    this.scene.switch('BattleScene');
+
+  }
+
+});
